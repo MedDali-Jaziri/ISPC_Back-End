@@ -3,8 +3,8 @@ package ispc.hermes.service;
 import ispc.hermes.model.ERole;
 import ispc.hermes.model.Role;
 import ispc.hermes.model.User;
-import ispc.hermes.payload.request.LoginRequest;
-import ispc.hermes.payload.request.SignupRequest;
+import ispc.hermes.payload.request.POST.LoginRequest;
+import ispc.hermes.payload.request.POST.SignupRequest;
 import ispc.hermes.payload.response.ErrorMessage;
 import ispc.hermes.payload.response.MessageResponse;
 import ispc.hermes.payload.response.UserInfoResponse;
@@ -17,9 +17,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.MailException;
-import org.springframework.mail.MailSender;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -128,7 +125,7 @@ public class UserService {
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
 
-    public ResponseEntity<?> activationLink(String email){
+    public ResponseEntity<?> activationLinkService(String email){
         try{
             if(email.isEmpty())
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new ErrorMessage("Please add all the fields"));

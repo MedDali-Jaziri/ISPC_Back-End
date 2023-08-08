@@ -1,13 +1,12 @@
 package ispc.hermes.controller;
 
-import ispc.hermes.payload.request.LoginRequest;
-import ispc.hermes.payload.request.SignupRequest;
+import ispc.hermes.payload.request.POST.LoginRequest;
+import ispc.hermes.payload.request.POST.SignupRequest;
 import ispc.hermes.service.UserService;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -27,13 +26,13 @@ public class AuthController {
         return this.userService.registerUserService(signUpRequest);
     }
 
+    @PostMapping("/activationLink")
+    public ResponseEntity<?> activationLink(@Valid @RequestParam String email){
+        return  this.userService.activationLinkService(email);
+    }
+
     @PostMapping("/signout")
     public ResponseEntity<?> logoutUser() {
         return this.userService.logoutUserService();
-    }
-
-    @PostMapping("/activationLink")
-    public ResponseEntity<?> activationLink(@RequestParam String email){
-        return  this.userService.activationLink(email);
     }
 }
