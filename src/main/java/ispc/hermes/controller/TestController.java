@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin(origins = "*", maxAge = 3600)
-// for Angular Client (withCredentials)
+// For any Client like Angular or FLutter (withCredentials)
 // @CrossOrigin(origins = "http://localhost:8081", maxAge = 3600, allowCredentials="true")
 @RestController
 @RequestMapping("/api/test")
@@ -22,15 +22,16 @@ public class TestController {
         return "Public Content.";
     }
 
+
     @GetMapping("/user")
-    @PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('TOURIST') or hasRole('EXPERT') or hasRole('ADMIN')")
     public String userAccess(HttpServletRequest request) {
         System.out.println(jwtUtils.getJwtFromCookies(request));
         return "User Content.";
     }
 
     @GetMapping("/mod")
-    @PreAuthorize("hasRole('MODERATOR')")
+    @PreAuthorize("hasRole('EXPERT')")
     public String moderatorAccess() {
         return "Moderator Board.";
     }
