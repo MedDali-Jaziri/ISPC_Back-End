@@ -1,7 +1,7 @@
 package ispc.hermes.controller;
 
-import ispc.hermes.payload.request.POST.LoginRequest;
-import ispc.hermes.payload.request.POST.SignupRequest;
+import ispc.hermes.payload.request.POST.Tourist.LoginRequest;
+import ispc.hermes.payload.request.POST.Tourist.SignupRequest;
 import ispc.hermes.service.UserService;
 
 import jakarta.validation.Valid;

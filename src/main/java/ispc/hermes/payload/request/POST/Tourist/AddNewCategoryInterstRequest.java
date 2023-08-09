@@ -1,4 +1,4 @@
-package ispc.hermes.payload.request.POST;
+package ispc.hermes.payload.request.POST.Tourist;
 
 import lombok.Data;
 
