@@ -1,33 +1,26 @@
 package ispc.hermes.service;
 
 import ispc.hermes.model.*;
-import ispc.hermes.payload.request.GET.GetAllPoIInEachTripsRequest;
 import ispc.hermes.payload.request.GET.GetAllPoIInEachTripsUsingAdminAccountRequest;
 import ispc.hermes.payload.request.GET.GetSpecificOfPoIsNotPublishedRequest;
-import ispc.hermes.payload.request.POST.*;
+import ispc.hermes.payload.request.POST.Tourist.*;
 import ispc.hermes.payload.request.PUT.ModifyNameTripRequest;
 import ispc.hermes.payload.request.PUT.PutStateOfTripsRequest;
 import ispc.hermes.payload.response.MessageResponse;
 import ispc.hermes.payload.response.UserInfoResponse;
 import ispc.hermes.repositoriy.*;
 import ispc.hermes.security.JWT.JwtUtils;
-import ispc.hermes.security.services.UserDetailsImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.apache.commons.io.FilenameUtils;
 
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class TouristService {
@@ -373,7 +366,7 @@ public class TouristService {
         }
     }
 
-    public ResponseEntity<?> modifyNameTripService(ModifyNameTripRequest modifyNameTripRequest){
+        public ResponseEntity<?> modifyNameTripService(ModifyNameTripRequest modifyNameTripRequest){
         try {
             Optional<Trip> trip = this.tripRepository.findTripByNameLocationTripAndIsFavoriteTrip(modifyNameTripRequest.getNameLocationTrip(), false);
             trip.get().setNameLocationTripUpdate(modifyNameTripRequest.getNameLocationTripUpdated());

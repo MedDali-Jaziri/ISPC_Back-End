@@ -1,4 +1,4 @@
-package ispc.hermes.payload.request.POST;
+package ispc.hermes.payload.request.POST.Tourist;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

@@ -1,9 +1,8 @@
 package ispc.hermes.controller;
 
-import ispc.hermes.payload.request.GET.GetAllPoIInEachTripsRequest;
 import ispc.hermes.payload.request.GET.GetAllPoIInEachTripsUsingAdminAccountRequest;
 import ispc.hermes.payload.request.GET.GetSpecificOfPoIsNotPublishedRequest;
-import ispc.hermes.payload.request.POST.*;
+import ispc.hermes.payload.request.POST.Tourist.*;
 import ispc.hermes.payload.request.PUT.ModifyNameTripRequest;
 import ispc.hermes.payload.request.PUT.PutStateOfTripsRequest;
 import ispc.hermes.service.TouristService;

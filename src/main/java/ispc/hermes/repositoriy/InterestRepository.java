@@ -8,4 +8,6 @@ import java.util.Optional;
 @Repository
 public interface InterestRepository extends JpaRepository<Interest, Long> {
     Optional<Interest> findByNameInterstAndActivationInterst(String nameInterest, Boolean activationInterest);
+
+    Optional<Interest> findByNameInterst(String nameInterest);
 }
