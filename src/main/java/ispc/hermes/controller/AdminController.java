@@ -1,6 +1,7 @@
 package ispc.hermes.controller;
 
 import ispc.hermes.payload.request.POST.Admin.ActivateNewCategoryRequest;
+import ispc.hermes.payload.request.POST.Admin.ActivateNewInterestsRequest;
 import ispc.hermes.payload.request.POST.Admin.LoginAdminRequest;
 import ispc.hermes.payload.request.POST.Tourist.SignupRequest;
 import ispc.hermes.service.AdminService;
@@ -35,5 +36,11 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> activateNewCategory(@Valid @RequestBody ActivateNewCategoryRequest activateNewCategoryRequest, HttpServletRequest request){
         return this.adminService.activateNewCategoryService(activateNewCategoryRequest, request);
+    }
+
+    @PostMapping("/activateNewInterests")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> activateNewInterests(@Valid @RequestBody ActivateNewInterestsRequest activateNewInterestsRequest, HttpServletRequest request){
+        return this.adminService.activateNewInterestsService(activateNewInterestsRequest, request);
     }
 }
