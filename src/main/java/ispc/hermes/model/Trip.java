@@ -32,13 +32,13 @@ public class Trip {
     @NotBlank
     private String nameLocationTripUpdate;
 
-    @NotBlank
+    @Nullable
     private Boolean isPublishedToHerMeS;
 
-    @NotBlank
+    @Nullable
     private Boolean isPersonalTrip;
 
-    @NotBlank
+    @Nullable
     private Boolean isFavoriteTrip;
 
     @ManyToMany(fetch = FetchType.LAZY)

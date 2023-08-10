@@ -20,15 +20,14 @@ public class ExpertController {
     private ExpertService expertService;
 
     @PostMapping("/loginExpert")
-    @PreAuthorize("hasRole('EXPERT')")
     public ResponseEntity<?> addExpert(@Valid @RequestBody LoginRequest loginRequest){
         return this.expertService.loginExpertService(loginRequest);
     }
 
     @PostMapping("/addNewCategory")
     @PreAuthorize("hasRole('EXPERT')")
-    public ResponseEntity<?> addNewCategory(@Valid @RequestBody AddNewCategoryRequest addNewCategoryRequest){
-        return this.expertService.addNewCategoryService(addNewCategoryRequest);
+    public ResponseEntity<?> addNewCategory(@Valid @RequestBody AddNewCategoryRequest addNewCategoryRequest, HttpServletRequest request){
+        return this.expertService.addNewCategoryService(addNewCategoryRequest, request);
     }
 
     @GetMapping("/getListOfCategoriesNotActivate")

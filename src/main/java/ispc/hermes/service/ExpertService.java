@@ -68,8 +68,10 @@ public class ExpertService {
                         roles));
     }
 
-    public ResponseEntity<?> addNewCategoryService(AddNewCategoryRequest addNewCategoryRequest){
+    public ResponseEntity<?> addNewCategoryService(AddNewCategoryRequest addNewCategoryRequest, HttpServletRequest request){
         try {
+            String userName = jwtUtils.getUserNameFromJwtToken(jwtUtils.getJwtFromCookies(request));
+            Optional<User> user = this.userRepository.findByUsername(userName);
             Optional<Category> category = this.categoryRepository.findByNameCategory(addNewCategoryRequest.getNameCategory());
             if (category.isPresent()){
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -79,12 +81,14 @@ public class ExpertService {
                 Category newCategory = new Category();
                 newCategory.setNameCategory(addNewCategoryRequest.getNameCategory());
                 newCategory.setActivationCategory(false);
+                newCategory.setUser(user.get());
+
                 this.categoryRepository.save(newCategory);
                 return ResponseEntity.status(HttpStatus.OK)
                         .body("The "+addNewCategoryRequest.getNameCategory()+" is added with success !!");
             }
         }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function addNewCategory!!");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function addNewCategory!! "+exception);
         }
     }
 
