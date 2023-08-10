@@ -44,8 +44,8 @@ public class ExpertController {
 
     @PostMapping("/addNewInterests")
     @PreAuthorize("hasRole('EXPERT')")
-    public ResponseEntity<?> addNewInterests(@Valid @RequestBody AddNewInterestsRequest addNewInterestsRequest){
-        return this.expertService.addNewInterestsService(addNewInterestsRequest);
+    public ResponseEntity<?> addNewInterests(@Valid @RequestBody AddNewInterestsRequest addNewInterestsRequest, HttpServletRequest request){
+        return this.expertService.addNewInterestsService(addNewInterestsRequest, request);
     }
 
     @GetMapping("/getListOfInterestsNotActivate")

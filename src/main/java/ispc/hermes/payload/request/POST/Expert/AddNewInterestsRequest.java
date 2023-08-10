@@ -4,5 +4,5 @@ import lombok.Data;
 
 @Data
 public class AddNewInterestsRequest {
-    private String nameInterests;
+    private String nameInterest;
 }
