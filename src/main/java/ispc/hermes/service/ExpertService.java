@@ -68,8 +68,10 @@ public class ExpertService {
                         roles));
     }
 
-    public ResponseEntity<?> addNewCategoryService(AddNewCategoryRequest addNewCategoryRequest){
+    public ResponseEntity<?> addNewCategoryService(AddNewCategoryRequest addNewCategoryRequest, HttpServletRequest request){
         try {
+            String userName = jwtUtils.getUserNameFromJwtToken(jwtUtils.getJwtFromCookies(request));
+            Optional<User> user = this.userRepository.findByUsername(userName);
             Optional<Category> category = this.categoryRepository.findByNameCategory(addNewCategoryRequest.getNameCategory());
             if (category.isPresent()){
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -79,12 +81,14 @@ public class ExpertService {
                 Category newCategory = new Category();
                 newCategory.setNameCategory(addNewCategoryRequest.getNameCategory());
                 newCategory.setActivationCategory(false);
+                newCategory.setUser(user.get());
+
                 this.categoryRepository.save(newCategory);
                 return ResponseEntity.status(HttpStatus.OK)
                         .body("The "+addNewCategoryRequest.getNameCategory()+" is added with success !!");
             }
         }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function addNewCategory!!");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function addNewCategory!! "+exception);
         }
     }
 
@@ -98,7 +102,7 @@ public class ExpertService {
                 }
             }
             return ResponseEntity.status(HttpStatus.OK)
-                    .body("All the categories not activated are "+ Map.of("dataOfCategory", categoryList));
+                    .body(categoryList);
         }catch (Exception exception){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function getListOfCategoriesNotActivate!!");
         }
@@ -114,29 +118,32 @@ public class ExpertService {
                 }
             }
             return ResponseEntity.status(HttpStatus.OK)
-                    .body("All the categories not activated are "+ Map.of("dataOfCategory", categoryList));
+                    .body(categoryList);
         }catch (Exception exception){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function getListOfCategoriesNotActivate!!");
         }
     }
 
-    public ResponseEntity<?> addNewInterestsService(AddNewInterestsRequest addNewInterestsRequest){
+    public ResponseEntity<?> addNewInterestsService(AddNewInterestsRequest addNewInterestsRequest, HttpServletRequest request){
         try {
-            Optional<Interest> interest = this.interestRepository.findByNameInterst(addNewInterestsRequest.getNameInterests());
+            String userName = jwtUtils.getUserNameFromJwtToken(jwtUtils.getJwtFromCookies(request));
+            Optional<User> user = this.userRepository.findByUsername(userName);
+            Optional<Interest> interest = this.interestRepository.findByNameInterst(addNewInterestsRequest.getNameInterest());
             if (interest.isPresent()){
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body("You cannot add the same interest ");
             }
             else {
                 Interest newInterest = new Interest();
-                newInterest.setNameInterst(addNewInterestsRequest.getNameInterests());
+                newInterest.setNameInterst(addNewInterestsRequest.getNameInterest());
                 newInterest.setActivationInterst(false);
+                newInterest.setUser(user.get());
                 this.interestRepository.save(newInterest);
                 return ResponseEntity.status(HttpStatus.OK)
-                        .body("The "+addNewInterestsRequest.getNameInterests()+" is added with success !!");
+                        .body("The "+addNewInterestsRequest.getNameInterest()+" is added with success !!");
             }
         }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function addNewCategory!!");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function addNewCategory!!"+exception);
         }
     }
 
@@ -150,7 +157,7 @@ public class ExpertService {
                 }
             }
             return ResponseEntity.status(HttpStatus.OK)
-                    .body("All the interests not activated are "+ Map.of("dataOfInterest", interestList));
+                    .body(interestList);
         }catch (Exception exception){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function getListOfCategoriesNotActivate!!");
         }
@@ -166,7 +173,7 @@ public class ExpertService {
                 }
             }
             return ResponseEntity.status(HttpStatus.OK)
-                    .body("All the interests activated are "+ Map.of("dataOfInterest", interestList));
+                    .body(interestList);
         }catch (Exception exception){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function getListOfCategoriesNotActivate!!");
         }

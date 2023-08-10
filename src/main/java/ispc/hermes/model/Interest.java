@@ -1,6 +1,7 @@
 package ispc.hermes.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -24,7 +25,7 @@ public class Interest {
     @Size(max = 20)
     private String nameInterst;
 
-    @NotBlank
+    @Nullable
     private Boolean activationInterst;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
