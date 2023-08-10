@@ -22,6 +22,7 @@ public class TouristController {
 
 
     @GetMapping("/getSpecificUser")
+    @PreAuthorize("hasRole('TOURIST')")
     public ResponseEntity<?> getSpecificUser(HttpServletRequest request) {
         return this.touristService.getSpecificUserService(request);
     }

@@ -20,16 +20,20 @@ public class AdminController {
     @Autowired
     private AdminService adminService;
 
+    @PostMapping("/signupAdmin")
+    public ResponseEntity<?> registerAdmin(@Valid @RequestBody SignupRequest signUpRequest) {
+        return this.adminService.registerAdminService(signUpRequest);
+    }
+
+    @PostMapping("/loginAdmin")
+    public ResponseEntity<?> loginAdmin(@Valid @RequestBody LoginAdminRequest loginAdminRequest){
+        return this.adminService.loginAdminService(loginAdminRequest);
+    }
+
     @PostMapping("/addExpert")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> addExpert(@Valid @RequestBody SignupRequest signupRequest){
         return this.adminService.addExpertService(signupRequest);
-    }
-
-    @PostMapping("/loginAdmin")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> loginAdmin(@Valid @RequestBody LoginAdminRequest loginAdminRequest){
-        return this.adminService.loginAdminService(loginAdminRequest);
     }
 
     @PostMapping("/activateNewCategory")
