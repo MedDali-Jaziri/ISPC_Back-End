@@ -6,6 +6,10 @@ import ispc.hermes.model.User;
 import ispc.hermes.payload.request.POST.Expert.AddNewCategoryRequest;
 import ispc.hermes.payload.request.POST.Expert.AddNewInterestsRequest;
 import ispc.hermes.payload.request.POST.Tourist.LoginRequest;
+import ispc.hermes.payload.response.ErrorMessage;
+import ispc.hermes.payload.response.ExpertResponse.GET.GetListOfCategoriesResponse;
+import ispc.hermes.payload.response.ExpertResponse.GET.GetListOfInterestsResponse;
+import ispc.hermes.payload.response.MessageResponse;
 import ispc.hermes.payload.response.UserInfoResponse;
 import ispc.hermes.repositoriy.CategoryRepository;
 import ispc.hermes.repositoriy.InterestRepository;
@@ -75,7 +79,7 @@ public class ExpertService {
             Optional<Category> category = this.categoryRepository.findByNameCategory(addNewCategoryRequest.getNameCategory());
             if (category.isPresent()){
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("You cannot add the same category ");
+                        .body(new ErrorMessage("You cannot add the same category "));
             }
             else {
                 Category newCategory = new Category();
@@ -84,11 +88,10 @@ public class ExpertService {
                 newCategory.setUser(user.get());
 
                 this.categoryRepository.save(newCategory);
-                return ResponseEntity.status(HttpStatus.OK)
-                        .body("The "+addNewCategoryRequest.getNameCategory()+" is added with success !!");
+                return ResponseEntity.ok(new MessageResponse("The "+addNewCategoryRequest.getNameCategory()+" is added with success !!"));
             }
         }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function addNewCategory!! "+exception);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MessageResponse("There is an error on the function addNewCategory!! "+exception));
         }
     }
 
@@ -101,10 +104,12 @@ public class ExpertService {
                     categoryList.add(category);
                 }
             }
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(categoryList);
+            return ResponseEntity.ok(new GetListOfCategoriesResponse(
+                    "List of the categories not yet activated! ",
+                    categoryList
+            ));
         }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function getListOfCategoriesNotActivate!!");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorMessage("There is an error on the function getListOfCategoriesNotActivate!!"));
         }
     }
 
@@ -117,10 +122,12 @@ public class ExpertService {
                     categoryList.add(category);
                 }
             }
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(categoryList);
+            return ResponseEntity.ok(new GetListOfCategoriesResponse(
+                    "List of the categories are activated! ",
+                    categoryList
+            ));
         }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function getListOfCategoriesNotActivate!!");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorMessage("There is an error on the function getListOfCategoriesNotActivate!!"));
         }
     }
 
@@ -131,7 +138,7 @@ public class ExpertService {
             Optional<Interest> interest = this.interestRepository.findByNameInterst(addNewInterestsRequest.getNameInterest());
             if (interest.isPresent()){
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("You cannot add the same interest ");
+                        .body(new ErrorMessage("You cannot add the same interest "));
             }
             else {
                 Interest newInterest = new Interest();
@@ -139,11 +146,12 @@ public class ExpertService {
                 newInterest.setActivationInterst(false);
                 newInterest.setUser(user.get());
                 this.interestRepository.save(newInterest);
-                return ResponseEntity.status(HttpStatus.OK)
-                        .body("The "+addNewInterestsRequest.getNameInterest()+" is added with success !!");
+                return ResponseEntity.ok(new MessageResponse(
+                        "The "+addNewInterestsRequest.getNameInterest()+" is added with success !!"
+                ));
             }
         }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function addNewCategory!!"+exception);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorMessage("There is an error on the function addNewCategory!!"+exception));
         }
     }
 
@@ -156,10 +164,12 @@ public class ExpertService {
                     interestList.add(interest);
                 }
             }
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(interestList);
+            return ResponseEntity.ok(new GetListOfInterestsResponse(
+                    "List of the interests not yet activated! ",
+                    interestList
+            ));
         }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function getListOfCategoriesNotActivate!!");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorMessage("There is an error on the function getListOfCategoriesNotActivate!!"));
         }
     }
 
@@ -172,10 +182,12 @@ public class ExpertService {
                     interestList.add(interest);
                 }
             }
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(interestList);
+            return ResponseEntity.ok(new GetListOfInterestsResponse(
+                    "List of the interests are activated! ",
+                    interestList
+            ));
         }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function getListOfCategoriesNotActivate!!");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorMessage("There is an error on the function getListOfCategoriesNotActivate!!"));
         }
     }
 }

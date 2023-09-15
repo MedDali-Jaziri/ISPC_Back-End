@@ -6,6 +6,9 @@ import ispc.hermes.payload.request.POST.Admin.ActivateNewCategoryRequest;
 import ispc.hermes.payload.request.POST.Admin.ActivateNewInterestsRequest;
 import ispc.hermes.payload.request.POST.Admin.LoginAdminRequest;
 import ispc.hermes.payload.request.POST.Tourist.SignupRequest;
+import ispc.hermes.payload.response.AdminResponse.GET.GetListOfTripsUsingAdminAccountResponse;
+import ispc.hermes.payload.response.AdminResponse.GET.GetListPoIsOfTouringClubAddByTheScriptResponse;
+import ispc.hermes.payload.response.AdminResponse.POST.GetAllPoIInEachTripsUsingAdminAccountResponse;
 import ispc.hermes.payload.response.ErrorMessage;
 import ispc.hermes.payload.response.MessageResponse;
 import ispc.hermes.payload.response.UserInfoResponse;
@@ -172,8 +175,7 @@ public class AdminService {
             Optional<Category> category = this.categoryRepository.findByNameCategory(activateNewCategoryRequest.getNameCategory());
             category.get().setActivationCategory(true);
             this.categoryRepository.save(category.get());
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body("The "+activateNewCategoryRequest.getNameCategory()+" is activated with success !!");
+            return ResponseEntity.ok(new MessageResponse("The "+activateNewCategoryRequest.getNameCategory()+" is activated with success !!"));
         }catch (Exception exception){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function activateNewCategoryService !!");
         }
@@ -185,8 +187,7 @@ public class AdminService {
             Optional<Interest> interest = this.interestRepository.findByNameInterst(activateNewInterestsRequest.getNameInterest());
             interest.get().setActivationInterst(true);
             this.interestRepository.save(interest.get());
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body("The "+activateNewInterestsRequest.getNameInterest()+" is activated with success !!");
+            return ResponseEntity.ok(new MessageResponse("The "+activateNewInterestsRequest.getNameInterest()+" is activated with success !!"));
         }catch (Exception exception){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function activateNewCategoryService !!");
         }
@@ -196,8 +197,10 @@ public class AdminService {
         try {
             Set<PoI> poIS = this.poIRepository.findAllByIsPersonalPoI(false);
             List<PoI> poIListResponse = List.copyOf(poIS);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body("All the PoI's of touring club "+Map.of("data", poIListResponse));
+            return ResponseEntity.ok(new GetListPoIsOfTouringClubAddByTheScriptResponse(
+                    "All the PoI's of touring club ",
+                    poIListResponse
+            ));
         }catch (Exception exception){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function getListPoIsOfTouringClubAddByTheScriptService !!");
         }
@@ -211,8 +214,10 @@ public class AdminService {
             for (Trip trip: trips){
                 tripsResponse.add(trip);
             }
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body("All the PoI's of touring club using the Expert account"+Map.of("data", tripsResponse));
+            return ResponseEntity.ok(new GetListOfTripsUsingAdminAccountResponse(
+                    "The list of trips using an admin account !",
+                    tripsResponse
+            ));
         }catch (Exception exception){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function GetListOfTripsUsingAdminAccountService !!");
         }
@@ -222,8 +227,10 @@ public class AdminService {
         try {
             Optional<Trip> trip = this.tripRepository.findById(getAllPoIInEachTripsUsingAdminAccountRequest.getTripId());
             List<PoI> poIListResponse = List.copyOf(trip.get().getPoIS());
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body("All the PoI's In specific trip using the Expert account "+Map.of("data", poIListResponse));
+            return ResponseEntity.ok(new GetAllPoIInEachTripsUsingAdminAccountResponse(
+                    "List of Point of Interest realted with trip n°"+getAllPoIInEachTripsUsingAdminAccountRequest.getTripId(),
+                    poIListResponse
+            ));
         }catch (Exception exception){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function getAllPoIInEachTripsUsingAdminAccountService !!");
         }
