@@ -1,6 +1,7 @@
 package ispc.hermes.service;
 
 import ispc.hermes.model.*;
+import ispc.hermes.payload.request.GET.GetAllPoIInEachTripsUsingAdminAccountRequest;
 import ispc.hermes.payload.request.POST.Admin.ActivateNewCategoryRequest;
 import ispc.hermes.payload.request.POST.Admin.ActivateNewInterestsRequest;
 import ispc.hermes.payload.request.POST.Admin.LoginAdminRequest;
@@ -8,10 +9,7 @@ import ispc.hermes.payload.request.POST.Tourist.SignupRequest;
 import ispc.hermes.payload.response.ErrorMessage;
 import ispc.hermes.payload.response.MessageResponse;
 import ispc.hermes.payload.response.UserInfoResponse;
-import ispc.hermes.repositoriy.CategoryRepository;
-import ispc.hermes.repositoriy.InterestRepository;
-import ispc.hermes.repositoriy.RoleRepository;
-import ispc.hermes.repositoriy.UserRepository;
+import ispc.hermes.repositoriy.*;
 import ispc.hermes.security.JWT.JwtUtils;
 import ispc.hermes.security.services.UserDetailsImpl;
 import jakarta.servlet.http.HttpServletRequest;
@@ -52,6 +50,12 @@ public class AdminService {
 
     @Autowired
     private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private TripRepository tripRepository;
+
+    @Autowired
+    private PoIRepository poIRepository;
 
     public ResponseEntity<?> registerAdminService(SignupRequest signUpRequest) {
         if (userRepository.existsByUsername(signUpRequest.getUsername()) && !signUpRequest.getUsername().equals("Alberto bucciero")) {
@@ -185,6 +189,43 @@ public class AdminService {
                     .body("The "+activateNewInterestsRequest.getNameInterest()+" is activated with success !!");
         }catch (Exception exception){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function activateNewCategoryService !!");
+        }
+    }
+
+    public ResponseEntity<?> getListPoIsOfTouringClubAddByTheScriptService(HttpServletRequest request){
+        try {
+            Set<PoI> poIS = this.poIRepository.findAllByIsPersonalPoI(false);
+            List<PoI> poIListResponse = List.copyOf(poIS);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body("All the PoI's of touring club "+Map.of("data", poIListResponse));
+        }catch (Exception exception){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function getListPoIsOfTouringClubAddByTheScriptService !!");
+        }
+    }
+
+    public ResponseEntity<?> getListOfTripsUsingAdminAccountService(){
+        try {
+            Optional<User> user = this.userRepository.findByEmail("jaziriabdelkader@gmail.com");
+            Set<Trip> trips = user.get().getTrips();
+            Set<Trip> tripsResponse = new HashSet<>();
+            for (Trip trip: trips){
+                tripsResponse.add(trip);
+            }
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body("All the PoI's of touring club using the Expert account"+Map.of("data", tripsResponse));
+        }catch (Exception exception){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function GetListOfTripsUsingAdminAccountService !!");
+        }
+    }
+
+    public ResponseEntity<?> getAllPoIInEachTripsUsingAdminAccountService(GetAllPoIInEachTripsUsingAdminAccountRequest getAllPoIInEachTripsUsingAdminAccountRequest){
+        try {
+            Optional<Trip> trip = this.tripRepository.findById(getAllPoIInEachTripsUsingAdminAccountRequest.getTripId());
+            List<PoI> poIListResponse = List.copyOf(trip.get().getPoIS());
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body("All the PoI's In specific trip using the Expert account "+Map.of("data", poIListResponse));
+        }catch (Exception exception){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function getAllPoIInEachTripsUsingAdminAccountService !!");
         }
     }
 }

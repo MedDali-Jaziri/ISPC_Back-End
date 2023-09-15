@@ -61,6 +61,7 @@ public class PoI {
     private String websiteOfPoI;
 
     @Nullable
+    @Column(columnDefinition = "TEXT")
     private String descriptionPoI;
 
     @Nullable

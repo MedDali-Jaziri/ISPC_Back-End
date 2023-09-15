@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserInterestRequest {
-    private String nameRequest;
-    private Integer poiId;
+    private String nameInterest;
+    private Long poiId;
 }

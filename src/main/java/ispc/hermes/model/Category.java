@@ -25,7 +25,7 @@ public class Category {
     @Size(max = 20)
     private String nameCategory;
 
-    @Nullable
+    @Column(columnDefinition="tinyint(1) default 0")
     private Boolean activationCategory;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

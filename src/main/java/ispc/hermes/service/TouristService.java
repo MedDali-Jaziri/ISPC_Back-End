@@ -1,52 +1,66 @@
 package ispc.hermes.service;
 
 import ispc.hermes.model.*;
+import ispc.hermes.payload.request.GET.GetAllPoIInEachTripsRequest;
 import ispc.hermes.payload.request.GET.GetAllPoIInEachTripsUsingAdminAccountRequest;
 import ispc.hermes.payload.request.GET.GetSpecificOfPoIsNotPublishedRequest;
 import ispc.hermes.payload.request.POST.Tourist.*;
 import ispc.hermes.payload.request.PUT.ModifyNameTripRequest;
 import ispc.hermes.payload.request.PUT.PutStateOfTripsRequest;
-import ispc.hermes.payload.response.MessageResponse;
 import ispc.hermes.payload.response.UserInfoResponse;
 import ispc.hermes.repositoriy.*;
 import ispc.hermes.security.JWT.JwtUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.stereotype.Service;
 import org.apache.commons.io.FilenameUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 @Service
 public class TouristService {
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Autowired
-    InterestRepository interestRepository;
+    private InterestRepository interestRepository;
 
     @Autowired
-    CategoryRepository categoryRepository;
+    private CategoryRepository categoryRepository;
 
     @Autowired
-    PoIRepository poIRepository;
+    private PoIRepository poIRepository;
 
     @Autowired
-    CategoryInterestRepository categoryInterestRepository;
+    private UserCategoryRepository userCategoryRepository;
 
     @Autowired
-    TripRepository tripRepository;
+    private TripRepository tripRepository;
 
     @Autowired
-    JwtUtils jwtUtils;
+    private UserInterestRepository userInterestRepository;
 
     @Autowired
-    AuthenticationManager authenticationManager;
+    private RoleRepository roleRepository;
+
+    @Autowired
+    private JwtUtils jwtUtils;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
     public ResponseEntity<?> getSpecificUserService(HttpServletRequest request){
         try {
@@ -62,55 +76,122 @@ public class TouristService {
         }
     }
 
+
+    private String saveFileToStorageMethods(String directoryPath, String fileName, MultipartFile file) throws IOException {
+        // Create the directory if it doesn't exist
+        Path fullPath = Paths.get(directoryPath, fileName);
+        if (!Files.exists(fullPath.getParent())) {
+            Files.createDirectories(fullPath.getParent());
+        }
+
+        // Save the file to the specified location
+        Files.write(fullPath, file.getBytes());
+
+        // Return the file path as a string
+        return fullPath.toString();
+    }
+
+    public ResponseEntity<Resource> getImageService(String imageName) throws IOException {
+        String imagePath =  "src/main/resources/static/Images/" + imageName; // Replace with the actual image directory path
+
+        Path imageFilePath = Paths.get(imagePath);
+        Resource resource = new FileSystemResource(imageFilePath);
+
+        if (resource.exists() && resource.isReadable()) {
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_PNG) // Set the appropriate media type for your image
+                    .body(resource);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    public ResponseEntity<Resource> getAudio(String audioName) throws IOException {
+        String audioPath = "src/main/resources/static/Audios/" + audioName; // Replace with the actual audio directory path
+
+        Path audioFilePath = Paths.get(audioPath);
+        Resource resource = new FileSystemResource(audioFilePath);
+
+        if (resource.exists() && resource.isReadable()) {
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM) // Set the appropriate media type for your audio
+                    .body(resource);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    public ResponseEntity<?> addNewPoIService(String descriptionPoI,
+                                              MultipartFile imagePoI,
+                                              Double longitudeLocationPoI,
+                                              Double latitudeLocationPoI,
+                                              String nameLocationPoI,
+                                              String hashtagsPoI,
+                                              MultipartFile audioPoI,
+                                              boolean isPublishedToFB,
+                                              boolean isPublishedToInsta
+                                              ){
+        try {
+            String imageFileName = System.currentTimeMillis()+"."+ FilenameUtils.getExtension(imagePoI.getOriginalFilename());
+            String audioFileName  = System.currentTimeMillis()+"."+ FilenameUtils.getExtension(audioPoI.getOriginalFilename());
+
+            PoI poI = new PoI();
+            poI.setDescriptionPoI(descriptionPoI);
+            poI.setNameLocationPoI(nameLocationPoI);
+            poI.setImagePoI(imageFileName);
+            poI.setLongitudeLocationPoI(longitudeLocationPoI);
+            poI.setLatitudeLocationPoI(latitudeLocationPoI);
+            poI.setHashtagsPoI(hashtagsPoI);
+            poI.setAudioPoI(audioFileName);
+            poI.setIsPublishedToFB(isPublishedToFB);
+            poI.setIsPublishedToInsta(isPublishedToInsta);
+            poI.setIsPersonalPoI(true);
+            PoI poIResponse = this.poIRepository.save(poI);
+            String imagePath = "C:\\Users\\real7\\OneDrive\\Desktop\\HerMeS\\HerMeS\\src\\main\\resources\\static\\Images";
+            String audioPath = "C:\\Users\\real7\\OneDrive\\Desktop\\HerMeS\\HerMeS\\src\\main\\resources\\static\\Audios";
+
+            saveFileToStorageMethods(imagePath, imageFileName, imagePoI);
+            saveFileToStorageMethods(audioPath, audioFileName, audioPoI);
+
+            return ResponseEntity.ok(poIResponse);
+        }catch (Exception exception){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function addNewPoIService!!");
+        }
+    }
+
     public ResponseEntity<?> addNewUserInterestService(UserInterestRequest userInterestRequest, HttpServletRequest request){
         try {
-            Optional<Interest> interest = this.interestRepository.findByNameInterstAndActivationInterst(userInterestRequest.getNameRequest(), true);
+            // 1. Get the Interest object from DataBase
+            Optional<Interest> interest = this.interestRepository.findByNameInterstAndActivationInterst(userInterestRequest.getNameInterest(), true);
             String userName = jwtUtils.getUserNameFromJwtToken(jwtUtils.getJwtFromCookies(request));
+            // 2. Get the user object from Cookies
             Optional<User> user = this.userRepository.findByUsername(userName);
-            interest.get().setUser(user.get());
-            Interest interestResponse = this.interestRepository.save(interest.get());
-            return ResponseEntity.ok().body(new MessageResponse("We add the "+userInterestRequest.getNameRequest()+" for the username: "+ user.get().getUsername()+ Map.of("data",interestResponse)));
+            // 3. Get the PoI object from Database
+            Optional<PoI> poI = this.poIRepository.findByPosition(userInterestRequest.getPoiId());
+            UserInterest userInterest = new UserInterest();
+            userInterest.setUser(user.get());
+            userInterest.setInterest(interest.get());
+            userInterest.setPoI(poI.get());
+            UserInterest userInterestResponse = this.userInterestRepository.save(userInterest);
+            return ResponseEntity.ok().body(userInterestResponse);
 
         }catch (Exception exception){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function addNewUserInterestService!!");
         }
     }
 
-    public ResponseEntity<?> addNewPoIService(AddPoIRequest addPoIRequest, HttpServletRequest request){
-        try {
-            String imageFileName = System.currentTimeMillis()+"."+ FilenameUtils.getExtension(addPoIRequest.getImagePoI().getOriginalFilename());
-            String audioFileName  = System.currentTimeMillis()+"."+ FilenameUtils.getExtension(addPoIRequest.getAudioPoI().getOriginalFilename());
-
-            PoI poI = new PoI();
-            poI.setNameLocationPoI(addPoIRequest.getNameLocationPoI());
-            poI.setImagePoI(imageFileName);
-            poI.setLongitudeLocationPoI(addPoIRequest.getLongitudeLocationPoI());
-            poI.setLatitudeLocationPoI(addPoIRequest.getLatitudeLocationPoI());
-            poI.setNameLocationPoI(addPoIRequest.getNameLocationPoI());
-            poI.setHashtagsPoI(addPoIRequest.getHashtagsPoI());
-            poI.setAudioPoI(audioFileName);
-            poI.setIsPublishedToFB(addPoIRequest.getIsPublishedToFB());
-            poI.setIsPublishedToInsta(addPoIRequest.getIsPublishedToInsta());
-            poI.setIsPersonalPoI(true);
-            PoI poIResponse = this.poIRepository.save(poI);
-            return ResponseEntity.ok("New PoI added successfully "+ Map.of("data", poIResponse));
-        }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function addNewPoIService!!");
-        }
-    }
-
     public ResponseEntity<?> addNewCategoryInterestService(AddNewCategoryInterstRequest addPoIToTripRequest, HttpServletRequest request){
         try {
-            Optional<PoI> poI =  this.poIRepository.findById(addPoIToTripRequest.getPoiId());
-            Optional<Category> category = this.categoryRepository.findByNameCategoryAndActivationCategory(addPoIToTripRequest.getNameCategory(), true);
-            CategoryInterest categoryInterest = new CategoryInterest();
             String userName = jwtUtils.getUserNameFromJwtToken(jwtUtils.getJwtFromCookies(request));
             Optional<User> user = this.userRepository.findByUsername(userName);
-            categoryInterest.setUser(user.get());
-            categoryInterest.setCategory(category.get());
-            categoryInterest.setPoI(poI.get());
-            CategoryInterest categoryInterestResponse = this.categoryInterestRepository.save(categoryInterest);
-            return ResponseEntity.ok("We add a new category interest with success !!"+ Map.of("data", categoryInterestResponse));
+            Optional<PoI> poI =  this.poIRepository.findById(addPoIToTripRequest.getPoiId());
+            Optional<Category> category = this.categoryRepository.findByNameCategoryAndActivationCategory(addPoIToTripRequest.getNameCategory(), true);
+            UserCategory userCategory = new UserCategory();
+            userCategory.setUser(user.get());
+            userCategory.setCategory(category.get());
+            userCategory.setPoI(poI.get());
+            UserCategory userCategoryResponse = this.userCategoryRepository.save(userCategory);
+            return ResponseEntity.ok(userCategoryResponse);
 
         }catch (Exception exception){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function addNewCategoryInterestService!!");
@@ -122,15 +203,17 @@ public class TouristService {
             String userName = jwtUtils.getUserNameFromJwtToken(jwtUtils.getJwtFromCookies(request));
             Optional<User> user = this.userRepository.findByUsername(userName);
             Set<Trip> trips = user.get().getTrips();
-            Set<PoI> poIS = new HashSet<>();
+            Set<Trip> tripsResponse = new HashSet<>();
             for (Trip trip: trips) {
-                if(trip.getIsPublishedToHerMeS()==false){
-                    poIS.add((PoI) trip.getPoIS());
+                Boolean isPublishedToHerMeS = trip.getIsPublishedToHerMeS();
+                if (isPublishedToHerMeS != null && !isPublishedToHerMeS) {
+                    tripsResponse.add(trip);
                 }
             }
             return ResponseEntity.status(HttpStatus.OK)
-                    .body("All the poi's not published of " + user.get().getUsername()+ Map.of("data", poIS));
-        }catch (Exception exception){
+                    .body(tripsResponse);
+        }
+        catch (Exception exception){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function getListOfPoIsNotPublishedService!!");
         }
     }
@@ -140,14 +223,15 @@ public class TouristService {
             String userName = jwtUtils.getUserNameFromJwtToken(jwtUtils.getJwtFromCookies(request));
             Optional<User> user = this.userRepository.findByUsername(userName);
             Set<Trip> trips = user.get().getTrips();
-            Set<PoI> poIS = new HashSet<>();
+            Set<Trip> tripsResponse = new HashSet<>();
             for (Trip trip: trips) {
-                if(trip.getIsPublishedToHerMeS()){
-                    poIS.add((PoI) trip.getPoIS());
+                Boolean isPublishedToHerMeS = trip.getIsPublishedToHerMeS();
+                if (isPublishedToHerMeS != null && isPublishedToHerMeS) {
+                    tripsResponse.add(trip);
                 }
             }
             return ResponseEntity.status(HttpStatus.OK)
-                    .body("All the poi's not published of " + user.get().getUsername()+ Map.of("data", poIS));
+                    .body(tripsResponse);
         }catch (Exception exception){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error getListOfPoIsPublishedService!!");
         }
@@ -157,7 +241,7 @@ public class TouristService {
         try {
             String userName = jwtUtils.getUserNameFromJwtToken(jwtUtils.getJwtFromCookies(request));
             Optional<User> user = this.userRepository.findByUsername(userName);
-            Optional<CategoryInterest> categoryInterest = this.categoryInterestRepository.findByUserIdAndPoIPosition(user.get().getId(), getSpecificOfPoIsNotPublishedRequest.getPoiId());
+            Optional<UserCategory> categoryInterest = this.userCategoryRepository.findByUserIdAndPoIPosition(user.get().getId(), getSpecificOfPoIsNotPublishedRequest.getPoiId());
             return ResponseEntity.ok("This is the result of a specific PoIs "+ Map.of("dataOfInterests", categoryInterest));
         }catch (Exception exception){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function getListOfPoIsPublishedService !!");
@@ -169,7 +253,7 @@ public class TouristService {
             String userName = jwtUtils.getUserNameFromJwtToken(jwtUtils.getJwtFromCookies(request));
             Optional<User> user = this.userRepository.findByUsername(userName);
             Optional<Trip> trip = this.tripRepository.findTripByNameLocationTrip(addNewTripRequest.getNameLocationTrip());
-            if (trip.get() != null){
+            if (trip.isPresent()){
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body("You cannot create another trip with the same name: " + trip.get().getNameLocationTrip());
             }else {
@@ -178,10 +262,16 @@ public class TouristService {
                 newTrip.setNameLocationTrip(addNewTripRequest.getNameLocationTrip());
                 newTrip.setNameLocationTripUpdate(addNewTripRequest.getNameLocationTripUpdate());
                 newTrip.setIsPublishedToHerMeS(addNewTripRequest.getIsPublishedToHerMeS());
+                newTrip.setIsFavoriteTrip(false);
+                newTrip.setIsPersonalTrip(false);
                 this.tripRepository.save(newTrip);
-                user.get().setTrips((Set<Trip>) newTrip);
+
+                Set<Trip> userTrip = user.get().getTrips();
+                if(userTrip == null){userTrip = new HashSet<>();}
+                userTrip.add(newTrip);
+                user.get().setTrips(userTrip);
                 this.userRepository.save(user.get());
-                return ResponseEntity.ok("We Add a an PoI to a Trip "+ Map.of("data", newTrip));
+                return ResponseEntity.ok(newTrip);
             }
         }catch (Exception exception){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function addAnTripService !!");
@@ -191,9 +281,14 @@ public class TouristService {
     public ResponseEntity<?> addAnPoIToATripService(AddAnPoIToTripRequest addAnPoIToTripRequest){
         try {
             Optional<Trip> trip = this.tripRepository.findTripByNameLocationTrip(addAnPoIToTripRequest.getNameLocationTrip());
-            trip.get().setPoIS((Set<PoI>) this.poIRepository.getReferenceById(addAnPoIToTripRequest.getPoiId()));
+            Optional<PoI> poIS = this.poIRepository.findByPosition(addAnPoIToTripRequest.getPoiId());
+
+            Set<PoI> poISTrips = trip.get().getPoIS();
+            if(poISTrips==null){poISTrips = new HashSet<>();}
+            poISTrips.add(poIS.get());
+            trip.get().setPoIS(poISTrips);
             this.tripRepository.save(trip.get());
-            return ResponseEntity.ok("We Add a an PoI to a Trip "+ Map.of("data", trip));
+            return ResponseEntity.ok(trip);
         }catch (Exception exception){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the addAnPoIToATripService addAnTrip !!");
         }
@@ -206,25 +301,26 @@ public class TouristService {
             Set<Trip> trips = user.get().getTrips();
             Set<Trip> tripsResponse = new HashSet<>();
             for (Trip trip: trips) {
-                if(trip.getIsFavoriteTrip()==false){
+                Boolean isFavoriteTrip = trip.getIsFavoriteTrip();
+                if (isFavoriteTrip != null && !isFavoriteTrip) {
                     tripsResponse.add(trip);
                 }
             }
             return ResponseEntity.status(HttpStatus.OK)
-                    .body("All the favorite trips of" + user.get().getUsername()+ Map.of("data", tripsResponse));
+                    .body(tripsResponse);
         }catch (Exception exception){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function getListOfTrips !!");
         }
     }
 
-    public ResponseEntity<?> getAllPoIInEachTripsService(GetSpecificOfPoIsNotPublishedRequest getSpecificOfPoIsNotPublishedRequest, HttpServletRequest request){
+    public ResponseEntity<?> getAllPoIInEachTripsService(GetAllPoIInEachTripsRequest getAllPoIInEachTripsRequest, HttpServletRequest request){
         try {
             String userName = jwtUtils.getUserNameFromJwtToken(jwtUtils.getJwtFromCookies(request));
             Optional<User> user = this.userRepository.findByUsername(userName);
-            Optional<Trip> trip = this.tripRepository.findById(getSpecificOfPoIsNotPublishedRequest.getPoiId());
+            Optional<Trip> trip = this.tripRepository.findById(getAllPoIInEachTripsRequest.getTripId());
             Set<PoI> poISResponse = trip.get().getPoIS();
             return ResponseEntity.status(HttpStatus.OK)
-                    .body("All pois on each trip of" + user.get().getUsername()+ Map.of("data", poISResponse));
+                    .body(poISResponse);
         }catch (Exception exception){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function getAllPoIInEachTripsService !!");
         }
@@ -238,7 +334,7 @@ public class TouristService {
             trip.get().setIsPublishedToHerMeS(putStateOfTripsRequest.getIsPublishedToHerMeS());
             Trip tripResponse = this.tripRepository.save(trip.get());
             return ResponseEntity.status(HttpStatus.OK)
-                    .body("The trip id: "+putStateOfTripsRequest.getNameLocationTripId()+" is modified by "+user.get().getUsername()+ Map.of("data", tripResponse));
+                    .body(tripResponse);
         }catch (Exception exception){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function putStateOfTripsService !!");
         }
@@ -246,45 +342,69 @@ public class TouristService {
 
     public ResponseEntity<?> addPoIToFavoriteTripService(AddPoIToFavoriteTripRequest addPoIToFavoriteTripRequest, HttpServletRequest request){
         try {
-            Optional<Trip> trip = this.tripRepository.findTripByNameLocationTrip(addPoIToFavoriteTripRequest.getNameLocationTrip());
-            if (trip.isPresent()){
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("You cannot create another trip with the same name: " + trip.get().getNameLocationTrip());
+            String nameLocationTrip = addPoIToFavoriteTripRequest.getNameLocationTrip();
+            Optional<Trip> existingTrip = tripRepository.findTripByNameLocationTrip(nameLocationTrip);
+
+            Trip trip;
+            if (existingTrip.isPresent()) {
+                trip = existingTrip.get();
+            } else {
+                trip = new Trip();
+                trip.setNameLocationTrip(nameLocationTrip);
+                trip.setIsFavoriteTrip(addPoIToFavoriteTripRequest.getIsFavoriteTrip());
             }
-            else {
-                PoI poI = this.poIRepository.findByPosition(addPoIToFavoriteTripRequest.getPoiId());
-                Trip newTrip = new Trip();
-                newTrip.setNameLocationTrip(addPoIToFavoriteTripRequest.getNameLocationTrip());
-                newTrip.setIsFavoriteTrip(addPoIToFavoriteTripRequest.getIsFavoriteTrip());
-                newTrip.setPoIS((Set<PoI>) poI);
-                Trip tripResponse = this.tripRepository.save(newTrip);
+
+            Optional<PoI> poi = poIRepository.findByPosition(addPoIToFavoriteTripRequest.getPoiId());
+            if (poi.isPresent()) {
+                Set<PoI> poISTrips = trip.getPoIS();
+                if (poISTrips == null) {
+                    poISTrips = new HashSet<>();
+                }
+                poISTrips.add(poi.get());
+                trip.setPoIS(poISTrips);
+                trip = tripRepository.save(trip);
+
                 String userName = jwtUtils.getUserNameFromJwtToken(jwtUtils.getJwtFromCookies(request));
-                Optional<User> user = this.userRepository.findByUsername(userName);
-                user.get().setTrips((Set<Trip>) newTrip);
-                this.userRepository.save(user.get());
-                return ResponseEntity.status(HttpStatus.OK)
-                        .body("We add a favorite PoI with id number : "+addPoIToFavoriteTripRequest.getPoiId()+" for "+user.get().getUsername()+ Map.of("data", tripResponse));
+                Optional<User> user = userRepository.findByUsername(userName);
+                Set<Trip> userTrips = user.get().getTrips();
+                if (userTrips == null) {
+                    userTrips = new HashSet<>();
+                }
+                userTrips.add(trip);
+                user.get().setTrips(userTrips);
+                userRepository.save(user.get());
+
+                return ResponseEntity.status(HttpStatus.OK).body(trip);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("POI with ID " + addPoIToFavoriteTripRequest.getPoiId() + " not found.");
             }
-        }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function addPoIToFavoriteTripService !!");
+        } catch (Exception exception) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("There is an error on the function addPoIToFavoriteTripService!!");
         }
     }
 
-    public ResponseEntity<?> getAllPoIInFavoriteTripsService(HttpServletRequest request){
-        try{
+    public ResponseEntity<?> getAllPoIInFavoriteTripsService(HttpServletRequest request) {
+        try {
             String userName = jwtUtils.getUserNameFromJwtToken(jwtUtils.getJwtFromCookies(request));
             Optional<User> user = this.userRepository.findByUsername(userName);
             Set<Trip> trips = user.get().getTrips();
-            Set<PoI> poISResponse = new HashSet<>();
+            Set<Trip> tripsResponse = new HashSet<>();
             for (Trip trip: trips) {
-                poISResponse.add((PoI) trip.getPoIS());
+                Boolean isFavoriteTrip = trip.getIsFavoriteTrip();
+                if (isFavoriteTrip != null && isFavoriteTrip) {
+                    tripsResponse.add(trip);
+                }
             }
             return ResponseEntity.status(HttpStatus.OK)
-                    .body("All PoI in favorite trip of the : "+user.get().getUsername()+ Map.of("data", poISResponse));
-        }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function getAllPoIInFavoriteTripsService !!");
+                    .body(tripsResponse);
+        }catch (Exception exception) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("There is an error on the function getAllPoIInFavoriteTripsService !!");
         }
     }
+
 
     public ResponseEntity<?> addUserSocialMediaService(AddUserSocialMediaRequest addUserSocialMediaRequest,HttpServletRequest request){
         try {
@@ -295,12 +415,17 @@ public class TouristService {
                         .body("User already exists " + user.get().getUsername());
             }
             else {
+                Set<Role> roles = new HashSet<>();
+                Role userRole = this.roleRepository.findByName(ERole.ROLE_TOURIST)
+                        .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                roles.add(userRole);
                 User newUser = new User();
                 newUser.setUsername(addUserSocialMediaRequest.getUserName());
                 newUser.setEmail(addUserSocialMediaRequest.getEmail());
                 newUser.setIsConnectedWithFBAccount(addUserSocialMediaRequest.getIsConnectedWithFBAccount());
                 newUser.setIsConnectedWithInstAccount(addUserSocialMediaRequest.getIsConnectedWithInstAccount());
                 newUser.setIsActive(true);
+                newUser.setRoles(roles);
                 User userResponse = this.userRepository.save(newUser);
                 return ResponseEntity.status(HttpStatus.OK)
                         .body("Add the user "+user.get().getUsername()+ " using social media accounts : "+Map.of("data", userResponse));
@@ -329,50 +454,13 @@ public class TouristService {
         }
     }
 
-    public ResponseEntity<?> getListPoIsOfTouringClubAddByTheScriptService(HttpServletRequest request){
-        try {
-            Set<PoI> poIS = this.poIRepository.findAllByIsPersonalPoI(false);
-            List<PoI> poIListResponse = List.copyOf(poIS);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body("All the PoI's of touring club "+Map.of("data", poIListResponse));
-        }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function getListPoIsOfTouringClubAddByTheScriptService !!");
-        }
-    }
-
-    public ResponseEntity<?> getListOfTripsUsingAdminAccountService(){
-        try {
-            Optional<User> user = this.userRepository.findByEmail("jaziriabdelkader@gmail.com");
-            Set<Trip> trips = user.get().getTrips();
-            Set<Trip> tripsResponse = new HashSet<>();
-            for (Trip trip: trips){
-                tripsResponse.add(trip);
-            }
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body("All the PoI's of touring club using the Expert account"+Map.of("data", tripsResponse));
-        }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function GetListOfTripsUsingAdminAccountService !!");
-        }
-    }
-
-    public ResponseEntity<?> getAllPoIInEachTripsUsingAdminAccountService(GetAllPoIInEachTripsUsingAdminAccountRequest getAllPoIInEachTripsUsingAdminAccountRequest){
-        try {
-            Optional<Trip> trip = this.tripRepository.findById(getAllPoIInEachTripsUsingAdminAccountRequest.getTripId());
-            List<PoI> poIListResponse = List.copyOf(trip.get().getPoIS());
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body("All the PoI's In specific trip using the Expert account "+Map.of("data", poIListResponse));
-        }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function getAllPoIInEachTripsUsingAdminAccountService !!");
-        }
-    }
-
         public ResponseEntity<?> modifyNameTripService(ModifyNameTripRequest modifyNameTripRequest){
         try {
             Optional<Trip> trip = this.tripRepository.findTripByNameLocationTripAndIsFavoriteTrip(modifyNameTripRequest.getNameLocationTrip(), false);
             trip.get().setNameLocationTripUpdate(modifyNameTripRequest.getNameLocationTripUpdated());
             Trip tripResponse = this.tripRepository.save(trip.get());
             return ResponseEntity.status(HttpStatus.OK)
-                    .body("Modify the old trip "+ modifyNameTripRequest.getNameLocationTrip()+" to "+modifyNameTripRequest.getNameLocationTripUpdated()+" "+Map.of("data", tripResponse));
+                    .body(tripResponse);
         }catch (Exception exception){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function modifyNameTripService !!");
         }

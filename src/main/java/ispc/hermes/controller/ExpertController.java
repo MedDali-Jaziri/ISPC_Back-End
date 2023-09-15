@@ -25,37 +25,37 @@ public class ExpertController {
     }
 
     @PostMapping("/addNewCategory")
-    @PreAuthorize("hasRole('EXPERT')")
+    @PreAuthorize("hasRole('EXPERT') or hasRole('ADMIN')")
     public ResponseEntity<?> addNewCategory(@Valid @RequestBody AddNewCategoryRequest addNewCategoryRequest, HttpServletRequest request){
         return this.expertService.addNewCategoryService(addNewCategoryRequest, request);
     }
 
     @GetMapping("/getListOfCategoriesNotActivate")
-    @PreAuthorize("hasRole('EXPERT')")
+    @PreAuthorize("hasRole('EXPERT') or hasRole('ADMIN')")
     public ResponseEntity<?> getListOfCategoriesNotActivate(){
         return this.expertService.getListOfCategoriesNotActivateService();
     }
 
     @GetMapping("/getListOfCategoriesActivate")
-    @PreAuthorize("hasRole('EXPERT')")
+    @PreAuthorize("hasRole('EXPERT') or hasRole('ADMIN')")
     public ResponseEntity<?> getListOfCategoriesActivate(){
         return this.expertService.getListOfCategoriesActivateService();
     }
 
     @PostMapping("/addNewInterests")
-    @PreAuthorize("hasRole('EXPERT')")
+    @PreAuthorize("hasRole('EXPERT') or hasRole('ADMIN')")
     public ResponseEntity<?> addNewInterests(@Valid @RequestBody AddNewInterestsRequest addNewInterestsRequest, HttpServletRequest request){
         return this.expertService.addNewInterestsService(addNewInterestsRequest, request);
     }
 
     @GetMapping("/getListOfInterestsNotActivate")
-    @PreAuthorize("hasRole('EXPERT')")
+    @PreAuthorize("hasRole('EXPERT') or hasRole('ADMIN')")
     public ResponseEntity<?> getListOfInterestsNotActivate(){
         return this.expertService.getListOfInterestsNotActivateService();
     }
 
     @GetMapping("/getListOfInterestsActivate")
-    @PreAuthorize("hasRole('EXPERT')")
+    @PreAuthorize("hasRole('EXPERT') or hasRole('ADMIN')")
     public ResponseEntity<?> getListOfInterestsActivate(){
         return this.expertService.getListOfInterestsActivateService();
     }
