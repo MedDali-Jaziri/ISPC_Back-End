@@ -1,5 +1,6 @@
 package ispc.hermes.controller;
 
+import ispc.hermes.payload.request.GET.GetAllPoIInEachTripsUsingAdminAccountRequest;
 import ispc.hermes.payload.request.POST.Admin.ActivateNewCategoryRequest;
 import ispc.hermes.payload.request.POST.Admin.ActivateNewInterestsRequest;
 import ispc.hermes.payload.request.POST.Admin.LoginAdminRequest;
@@ -46,5 +47,23 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> activateNewInterests(@Valid @RequestBody ActivateNewInterestsRequest activateNewInterestsRequest, HttpServletRequest request){
         return this.adminService.activateNewInterestsService(activateNewInterestsRequest, request);
+    }
+
+    @GetMapping("/getListPoIsOfTouringClubAddByTheScript")
+    @PreAuthorize("hasRole('EXPERT') or hasRole('ADMIN')")
+    public ResponseEntity<?> getListPoIsOfTouringClubAddByTheScript(HttpServletRequest request){
+        return this.adminService.getListPoIsOfTouringClubAddByTheScriptService(request);
+    }
+
+    @GetMapping("/getListOfTripsUsingAdminAccount")
+    @PreAuthorize("hasRole('EXPERT') or hasRole('ADMIN')")
+    public ResponseEntity<?> getListOfTripsUsingAdminAccount(){
+        return this.adminService.getListOfTripsUsingAdminAccountService();
+    }
+
+    @PostMapping("/getAllPoIInEachTripsUsingAdminAccount")
+    @PreAuthorize("hasRole('EXPERT') or hasRole('ADMIN')")
+    public ResponseEntity<?> getAllPoIInEachTripsUsingAdminAccount(@Valid @RequestBody GetAllPoIInEachTripsUsingAdminAccountRequest getAllPoIInEachTripsUsingAdminAccountRequest){
+        return this.adminService.getAllPoIInEachTripsUsingAdminAccountService(getAllPoIInEachTripsUsingAdminAccountRequest);
     }
 }

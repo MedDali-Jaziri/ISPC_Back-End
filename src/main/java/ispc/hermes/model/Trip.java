@@ -24,21 +24,19 @@ public class Trip {
     private String descriptionBrief;
 
     @Nullable
+    @Column(columnDefinition = "TEXT")
     private String descriptionLong;
 
     @NotBlank
     private String nameLocationTrip;
 
-    @NotBlank
+    @Nullable
     private String nameLocationTripUpdate;
 
-    @Nullable
     private Boolean isPublishedToHerMeS;
 
-    @Nullable
     private Boolean isPersonalTrip;
 
-    @Nullable
     private Boolean isFavoriteTrip;
 
     @ManyToMany(fetch = FetchType.LAZY)

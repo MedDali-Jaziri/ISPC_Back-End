@@ -9,7 +9,7 @@ import java.util.Set;
 
 @Repository
 public interface PoIRepository extends JpaRepository<PoI, Long> {
-    PoI findByPosition(Long position);
+    Optional<PoI> findByPosition(Long position);
 
     Set<PoI> findAllByIsPersonalPoI(Boolean isPersonalPoI);
 }
