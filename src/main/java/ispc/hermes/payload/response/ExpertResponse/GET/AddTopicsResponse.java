@@ -1,14 +1,16 @@
 package ispc.hermes.payload.response.ExpertResponse.GET;
 
-import ispc.hermes.model.Category;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.util.List;
-
-@Data
 @AllArgsConstructor
-public class GetListOfCategoriesResponse {
+@Data
+
+public class AddTopicsResponse {
     private String message;
-    private List<Category> data;
+    private List<String> data;
+    public AddTopicsResponse(String message){
+        this.message = message;
+    }
 }

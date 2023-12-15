@@ -1,22 +1,25 @@
 package ispc.hermes.service;
 
-import ispc.hermes.model.Category;
-import ispc.hermes.model.Interest;
+import ispc.hermes.model.PoI;
+import ispc.hermes.model.TopicHAI;
+import ispc.hermes.model.Trip;
 import ispc.hermes.model.User;
-import ispc.hermes.payload.request.POST.Expert.AddNewCategoryRequest;
-import ispc.hermes.payload.request.POST.Expert.AddNewInterestsRequest;
+import ispc.hermes.payload.request.GET.GetAllPoIInEachTripsComingFromHAIRequest;
 import ispc.hermes.payload.request.POST.Tourist.LoginRequest;
-import ispc.hermes.payload.response.ErrorMessage;
-import ispc.hermes.payload.response.ExpertResponse.GET.GetListOfCategoriesResponse;
-import ispc.hermes.payload.response.ExpertResponse.GET.GetListOfInterestsResponse;
-import ispc.hermes.payload.response.MessageResponse;
+import ispc.hermes.payload.response.AdminResponse.GET.GetListOfTripsComingFromHAIResponse;
+import ispc.hermes.payload.response.AdminResponse.GET.GetListPoIsComingFromHAIServiceResponse;
+import ispc.hermes.payload.response.AdminResponse.POST.GetAllPoIInEachTripsComingFromHAIResponse;
+import ispc.hermes.payload.response.ExpertResponse.GET.AddTopicsResponse;
 import ispc.hermes.payload.response.UserInfoResponse;
-import ispc.hermes.repositoriy.CategoryRepository;
-import ispc.hermes.repositoriy.InterestRepository;
+import ispc.hermes.repositoriy.PoIRepository;
+import ispc.hermes.repositoriy.TopicHAIRepository;
+import ispc.hermes.repositoriy.TripRepository;
 import ispc.hermes.repositoriy.UserRepository;
 import ispc.hermes.security.JWT.JwtUtils;
 import ispc.hermes.security.services.UserDetailsImpl;
 import jakarta.servlet.http.HttpServletRequest;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -28,10 +31,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,16 +44,23 @@ public class ExpertService {
     private UserRepository userRepository;
 
     @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private InterestRepository interestRepository;
+    private TopicHAIRepository topicHAIRepository;
 
     @Autowired
     private AuthenticationManager authenticationManager;
 
     @Autowired
     private JwtUtils jwtUtils;
+
+    @Autowired
+    private HAIService haiService;
+
+    @Autowired
+    private TripRepository tripRepository;
+
+    @Autowired
+    private PoIRepository poIRepository;
+
 
     public ResponseEntity<UserInfoResponse> loginExpertService(LoginRequest loginRequest){
         Authentication authentication = authenticationManager
@@ -72,122 +83,77 @@ public class ExpertService {
                         roles));
     }
 
-    public ResponseEntity<?> addNewCategoryService(AddNewCategoryRequest addNewCategoryRequest, HttpServletRequest request){
+    public ResponseEntity<AddTopicsResponse> addNewTopicFromHAIService(HttpServletRequest request){
         try {
             String userName = jwtUtils.getUserNameFromJwtToken(jwtUtils.getJwtFromCookies(request));
             Optional<User> user = this.userRepository.findByUsername(userName);
-            Optional<Category> category = this.categoryRepository.findByNameCategory(addNewCategoryRequest.getNameCategory());
-            if (category.isPresent()){
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ErrorMessage("You cannot add the same category "));
-            }
-            else {
-                Category newCategory = new Category();
-                newCategory.setNameCategory(addNewCategoryRequest.getNameCategory());
-                newCategory.setActivationCategory(false);
-                newCategory.setUser(user.get());
 
-                this.categoryRepository.save(newCategory);
-                return ResponseEntity.ok(new MessageResponse("The "+addNewCategoryRequest.getNameCategory()+" is added with success !!"));
-            }
-        }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MessageResponse("There is an error on the function addNewCategory!! "+exception));
-        }
-    }
+            String apiUrl = "http://80.211.238.135:8080/knowledge/topics";
 
-    public ResponseEntity<?> getListOfCategoriesNotActivateService(){
-        try {
-            List<Category> categories = this.categoryRepository.findAll();
-            List<Category> categoryList = new ArrayList<>();
-            for (Category category: categories){
-                if(!category.getActivationCategory()){
-                    categoryList.add(category);
+            String listTopicResult = haiService.fetchListTopicsFromHAIAPI(apiUrl);
+            JSONArray jsonArray = new JSONArray(listTopicResult);
+
+            List<String> duplicateTopics = new ArrayList<>();
+            for (int i=0; i< jsonArray.length();i++) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                String label = jsonObject.getString("label");
+                if (this.topicHAIRepository.existsByLabel(label)) {
+                    duplicateTopics.add(label);
+                } else {
+                    TopicHAI topicHAI = new TopicHAI();
+                    topicHAI.setIdHAITopic(jsonObject.getString("id"));
+                    topicHAI.setLabel(jsonObject.getString("label"));
+                    topicHAI.setUser(user.get());
+                    this.topicHAIRepository.save(topicHAI);
                 }
             }
-            return ResponseEntity.ok(new GetListOfCategoriesResponse(
-                    "List of the categories not yet activated! ",
-                    categoryList
-            ));
+            if (!duplicateTopics.isEmpty()){
+                return ResponseEntity.status(HttpStatus.FOUND).body(new AddTopicsResponse("Topics already exist: ", duplicateTopics));
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(new AddTopicsResponse("The topic(s) added successfully from HAI!!"));
+
         }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorMessage("There is an error on the function getListOfCategoriesNotActivate!!"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new AddTopicsResponse("There is an error on the function addNewCategory!!"));
         }
     }
 
-    public ResponseEntity<?> getListOfCategoriesActivateService(){
+    public ResponseEntity<?> getListPoIsOfByTheHAIService(HttpServletRequest request){
         try {
-            List<Category> categories = this.categoryRepository.findAll();
-            List<Category> categoryList = new ArrayList<>();
-            for (Category category: categories){
-                if(category.getActivationCategory()){
-                    categoryList.add(category);
-                }
-            }
-            return ResponseEntity.ok(new GetListOfCategoriesResponse(
-                    "List of the categories are activated! ",
-                    categoryList
+            Set<PoI> poIS = this.poIRepository.findAllByIsPersonalPoI(false);
+            List<PoI> poIListResponse = List.copyOf(poIS);
+            return ResponseEntity.ok(new GetListPoIsComingFromHAIServiceResponse(
+                    "All the PoI's coming from the HAI Service !! ",
+                    poIListResponse
             ));
         }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorMessage("There is an error on the function getListOfCategoriesNotActivate!!"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new GetListPoIsComingFromHAIServiceResponse("There is an error on the function getListPoIsOfByTheHAIService !!"));
         }
     }
 
-    public ResponseEntity<?> addNewInterestsService(AddNewInterestsRequest addNewInterestsRequest, HttpServletRequest request){
+    public ResponseEntity<?> getListOfTripsUsingHAIService(HttpServletRequest request){
         try {
-            String userName = jwtUtils.getUserNameFromJwtToken(jwtUtils.getJwtFromCookies(request));
-            Optional<User> user = this.userRepository.findByUsername(userName);
-            Optional<Interest> interest = this.interestRepository.findByNameInterst(addNewInterestsRequest.getNameInterest());
-            if (interest.isPresent()){
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ErrorMessage("You cannot add the same interest "));
-            }
-            else {
-                Interest newInterest = new Interest();
-                newInterest.setNameInterst(addNewInterestsRequest.getNameInterest());
-                newInterest.setActivationInterst(false);
-                newInterest.setUser(user.get());
-                this.interestRepository.save(newInterest);
-                return ResponseEntity.ok(new MessageResponse(
-                        "The "+addNewInterestsRequest.getNameInterest()+" is added with success !!"
-                ));
-            }
+            Set<Trip> trips = this.tripRepository.findAllByIsPersonalTrip(false);
+            List<Trip> tripListResponse = List.copyOf(trips);
+
+            return ResponseEntity.ok(new GetListOfTripsComingFromHAIResponse(
+                    "The list of trips coming from HAI Service !",
+                    tripListResponse
+            ));
         }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorMessage("There is an error on the function addNewCategory!!"+exception));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new GetListOfTripsComingFromHAIResponse("There is an error on the function getListOfTripsUsingHAIService !!"));
         }
     }
 
-    public ResponseEntity<?> getListOfInterestsNotActivateService(){
+    public ResponseEntity<?> getAllPoIInEachTripsComingFromHAIService(GetAllPoIInEachTripsComingFromHAIRequest getAllPoIInEachTripsComingFromHAIRequest){
         try {
-            List<Interest> interests = this.interestRepository.findAll();
-            List<Interest> interestList = new ArrayList<>();
-            for (Interest interest: interests){
-                if(!interest.getActivationInterst()){
-                    interestList.add(interest);
-                }
-            }
-            return ResponseEntity.ok(new GetListOfInterestsResponse(
-                    "List of the interests not yet activated! ",
-                    interestList
+            Optional<Trip> trip = this.tripRepository.findTripByTripId(getAllPoIInEachTripsComingFromHAIRequest.getTripId());
+            List<PoI> poIListResponse = List.copyOf(trip.get().getPoIS());
+            return ResponseEntity.ok(new GetAllPoIInEachTripsComingFromHAIResponse(
+                    "List of Point of Interest related with trip n°"+ getAllPoIInEachTripsComingFromHAIRequest.getTripId(),
+                    poIListResponse
             ));
         }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorMessage("There is an error on the function getListOfCategoriesNotActivate!!"));
-        }
-    }
-
-    public ResponseEntity<?> getListOfInterestsActivateService(){
-        try {
-            List<Interest> interests = this.interestRepository.findAll();
-            List<Interest> interestList = new ArrayList<>();
-            for (Interest interest: interests){
-                if(interest.getActivationInterst()){
-                    interestList.add(interest);
-                }
-            }
-            return ResponseEntity.ok(new GetListOfInterestsResponse(
-                    "List of the interests are activated! ",
-                    interestList
-            ));
-        }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorMessage("There is an error on the function getListOfCategoriesNotActivate!!"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new GetAllPoIInEachTripsComingFromHAIResponse("There is an error on the function getAllPoIInEachTripsComingFromHAIService !!"));
         }
     }
 }

@@ -1,24 +1,15 @@
 package ispc.hermes.service;
 
 import ispc.hermes.model.*;
-import ispc.hermes.payload.request.GET.GetAllPoIInEachTripsUsingAdminAccountRequest;
-import ispc.hermes.payload.request.POST.Admin.ActivateNewCategoryRequest;
-import ispc.hermes.payload.request.POST.Admin.ActivateNewInterestsRequest;
 import ispc.hermes.payload.request.POST.Admin.LoginAdminRequest;
 import ispc.hermes.payload.request.POST.Tourist.SignupRequest;
-import ispc.hermes.payload.response.AdminResponse.GET.GetListOfTripsUsingAdminAccountResponse;
-import ispc.hermes.payload.response.AdminResponse.GET.GetListPoIsOfTouringClubAddByTheScriptResponse;
-import ispc.hermes.payload.response.AdminResponse.POST.GetAllPoIInEachTripsUsingAdminAccountResponse;
-import ispc.hermes.payload.response.ErrorMessage;
 import ispc.hermes.payload.response.MessageResponse;
 import ispc.hermes.payload.response.UserInfoResponse;
 import ispc.hermes.repositoriy.*;
 import ispc.hermes.security.JWT.JwtUtils;
 import ispc.hermes.security.services.UserDetailsImpl;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -38,12 +29,6 @@ public class AdminService {
 
     @Autowired
     private RoleRepository roleRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private InterestRepository interestRepository;
 
     @Autowired
     private PasswordEncoder encoder;
@@ -167,72 +152,5 @@ public class AdminService {
         user.setIsActive(true);
         userRepository.save(user);
         return ResponseEntity.ok(new MessageResponse("Expert registered successfully!"));
-    }
-
-    public ResponseEntity<?> activateNewCategoryService(ActivateNewCategoryRequest activateNewCategoryRequest, HttpServletRequest request){
-        try {
-            String userName = jwtUtils.getUserNameFromJwtToken(jwtUtils.getJwtFromCookies(request));
-            Optional<Category> category = this.categoryRepository.findByNameCategory(activateNewCategoryRequest.getNameCategory());
-            category.get().setActivationCategory(true);
-            this.categoryRepository.save(category.get());
-            return ResponseEntity.ok(new MessageResponse("The "+activateNewCategoryRequest.getNameCategory()+" is activated with success !!"));
-        }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function activateNewCategoryService !!");
-        }
-    }
-
-    public ResponseEntity<?> activateNewInterestsService(ActivateNewInterestsRequest activateNewInterestsRequest, HttpServletRequest request){
-        try {
-            String userName = jwtUtils.getUserNameFromJwtToken(jwtUtils.getJwtFromCookies(request));
-            Optional<Interest> interest = this.interestRepository.findByNameInterst(activateNewInterestsRequest.getNameInterest());
-            interest.get().setActivationInterst(true);
-            this.interestRepository.save(interest.get());
-            return ResponseEntity.ok(new MessageResponse("The "+activateNewInterestsRequest.getNameInterest()+" is activated with success !!"));
-        }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function activateNewCategoryService !!");
-        }
-    }
-
-    public ResponseEntity<?> getListPoIsOfTouringClubAddByTheScriptService(HttpServletRequest request){
-        try {
-            Set<PoI> poIS = this.poIRepository.findAllByIsPersonalPoI(false);
-            List<PoI> poIListResponse = List.copyOf(poIS);
-            return ResponseEntity.ok(new GetListPoIsOfTouringClubAddByTheScriptResponse(
-                    "All the PoI's of touring club ",
-                    poIListResponse
-            ));
-        }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function getListPoIsOfTouringClubAddByTheScriptService !!");
-        }
-    }
-
-    public ResponseEntity<?> getListOfTripsUsingAdminAccountService(){
-        try {
-            Optional<User> user = this.userRepository.findByEmail("jaziriabdelkader@gmail.com");
-            Set<Trip> trips = user.get().getTrips();
-            Set<Trip> tripsResponse = new HashSet<>();
-            for (Trip trip: trips){
-                tripsResponse.add(trip);
-            }
-            return ResponseEntity.ok(new GetListOfTripsUsingAdminAccountResponse(
-                    "The list of trips using an admin account !",
-                    tripsResponse
-            ));
-        }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function GetListOfTripsUsingAdminAccountService !!");
-        }
-    }
-
-    public ResponseEntity<?> getAllPoIInEachTripsUsingAdminAccountService(GetAllPoIInEachTripsUsingAdminAccountRequest getAllPoIInEachTripsUsingAdminAccountRequest){
-        try {
-            Optional<Trip> trip = this.tripRepository.findById(getAllPoIInEachTripsUsingAdminAccountRequest.getTripId());
-            List<PoI> poIListResponse = List.copyOf(trip.get().getPoIS());
-            return ResponseEntity.ok(new GetAllPoIInEachTripsUsingAdminAccountResponse(
-                    "List of Point of Interest realted with trip n°"+getAllPoIInEachTripsUsingAdminAccountRequest.getTripId(),
-                    poIListResponse
-            ));
-        }catch (Exception exception){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("There is an error on the function getAllPoIInEachTripsUsingAdminAccountService !!");
-        }
     }
 }

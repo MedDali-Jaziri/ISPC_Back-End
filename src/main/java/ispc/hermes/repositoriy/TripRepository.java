@@ -13,4 +13,8 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
     Optional<Trip> findTripByNameLocationTripOrId(String nameLocationTrip, Long id);
 
     Optional<Trip> findTripByNameLocationTripAndIsFavoriteTrip(String nameLocationTrip, Boolean isFavoriteTrip);
+
+    Set<Trip> findAllByIsPersonalTrip(Boolean isPersonalTrip);
+
+    Optional<Trip> findTripByTripId(String tripId);
 }

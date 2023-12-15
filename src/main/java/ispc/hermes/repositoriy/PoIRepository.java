@@ -11,5 +11,7 @@ import java.util.Set;
 public interface PoIRepository extends JpaRepository<PoI, Long> {
     Optional<PoI> findByPosition(Long position);
 
+    Set<PoI> findPoIByPosition(Long position);
+
     Set<PoI> findAllByIsPersonalPoI(Boolean isPersonalPoI);
 }

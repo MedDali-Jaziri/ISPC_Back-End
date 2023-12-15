@@ -1,4 +1,4 @@
-package ispc.hermes.payload.response.AdminResponse.GET;
+package ispc.hermes.payload.response.TouristResponse.GET;
 
 import ispc.hermes.model.PoI;
 import lombok.AllArgsConstructor;
@@ -8,7 +8,7 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class GetListPoIsOfTouringClubAddByTheScriptResponse {
+public class GetListFavoritePoIResponse {
     private String message;
-    private List<PoI> poIList;
+    private List<PoI> data;
 }

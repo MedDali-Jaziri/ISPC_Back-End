@@ -1,0 +1,29 @@
+version: '1.0'
+
+services:
+  mariadb:
+    image: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: 123
+      MYSQL_DATABASE: hermes_db_SB_Version01
+      MYSQL_USER: hermes
+      MYSQL_PASSWORD: 123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+  spring-boot-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - mariadb
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/hermes_db_SB_Version01
+      SPRING_DATASOURCE_USERNAME: hermes
+      SPRING_DATASOURCE_PASSWORD: 123
+
+volumes:
+  mariadb_data:

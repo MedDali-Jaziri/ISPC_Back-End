@@ -1,16 +1,17 @@
 package ispc.hermes.controller;
 
 import ispc.hermes.payload.request.GET.GetAllPoIInEachTripsRequest;
-import ispc.hermes.payload.request.GET.GetAllPoIInEachTripsUsingAdminAccountRequest;
-import ispc.hermes.payload.request.GET.GetSpecificOfPoIsNotPublishedRequest;
 import ispc.hermes.payload.request.POST.Tourist.*;
 import ispc.hermes.payload.request.PUT.ModifyNameTripRequest;
 import ispc.hermes.payload.request.PUT.PutStateOfTripsRequest;
+import ispc.hermes.payload.response.ErrorMessage;
 import ispc.hermes.service.TouristService;
+import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -56,16 +57,10 @@ public class TouristController {
         return this.touristService.getAudio(audioName);
     }
 
-    @PostMapping("/addNewUserInterest")
+    @PostMapping("/addNewUserTopic")
     @PreAuthorize("hasRole('TOURIST') or hasRole('EXPERT') or hasRole('ADMIN')")
-    public ResponseEntity<?> addNewUserInterest(@Valid @RequestBody UserInterestRequest userInterestRequest, HttpServletRequest request){
-        return this.touristService.addNewUserInterestService(userInterestRequest, request);
-    }
-
-    @PostMapping("/addNewCategoryInterest")
-    @PreAuthorize("hasRole('TOURIST') or hasRole('EXPERT') or hasRole('ADMIN')")
-    public ResponseEntity<?> addNewCategoryInterest(@Valid @RequestBody AddNewCategoryInterstRequest addNewCategoryInterst, HttpServletRequest request){
-        return this.touristService.addNewCategoryInterestService(addNewCategoryInterst, request);
+    public ResponseEntity<?> addNewUserTopic(@Valid @RequestBody UserTopicRequest userTopicRequest, HttpServletRequest request){
+        return this.touristService.addNewUserTopicService(userTopicRequest, request);
     }
 
     @GetMapping("/getListOfPoIsNotPublished")
@@ -78,12 +73,6 @@ public class TouristController {
     @PreAuthorize("hasRole('TOURIST') or hasRole('EXPERT') or hasRole('ADMIN')")
     public ResponseEntity<?> getListOfPoIsPublished(HttpServletRequest request){
         return this.touristService.getListOfPoIsPublishedService(request);
-    }
-
-    @PostMapping("/getSpecificOfPoIsNotPublished")
-    @PreAuthorize("hasRole('TOURIST') or hasRole('EXPERT') or hasRole('ADMIN')")
-    public ResponseEntity<?> getSpecificOfPoIsNotPublished(@Valid @RequestBody GetSpecificOfPoIsNotPublishedRequest getSpecificOfPoIsNotPublishedRequest , HttpServletRequest request){
-        return this.touristService.getSpecificOfPoIsNotPublishedService(getSpecificOfPoIsNotPublishedRequest, request);
     }
 
     @PostMapping("/addAnTrip")
@@ -116,11 +105,11 @@ public class TouristController {
         return this.touristService.putStateOfTripsService(putStateOfTripsRequest, request);
     }
 
-    @PostMapping("/addPoIToFavoriteTrip")
-    @PreAuthorize("hasRole('TOURIST') or hasRole('EXPERT') or hasRole('ADMIN')")
-    public ResponseEntity<?> addPoIToFavoriteTrip(@Valid @RequestBody AddPoIToFavoriteTripRequest addPoIToFavoriteTripRequest, HttpServletRequest request){
-        return this.touristService.addPoIToFavoriteTripService(addPoIToFavoriteTripRequest, request);
-    }
+//    @PostMapping("/addPoIToFavoriteTrip")
+//    @PreAuthorize("hasRole('TOURIST') or hasRole('EXPERT') or hasRole('ADMIN')")
+//    public ResponseEntity<?> addPoIToFavoriteTrip(@Valid @RequestBody AddPoIToFavoriteTripRequest addPoIToFavoriteTripRequest, HttpServletRequest request){
+//        return this.touristService.addPoIToFavoriteTripService(addPoIToFavoriteTripRequest, request);
+//    }
 
     @GetMapping("/getAllPoIInFavoriteTrips")
     @PreAuthorize("hasRole('TOURIST') or hasRole('EXPERT') or hasRole('ADMIN')")
@@ -146,5 +135,29 @@ public class TouristController {
     @PreAuthorize("hasRole('TOURIST') or hasRole('EXPERT') or hasRole('ADMIN')")
     public ResponseEntity<?> modifyNameTrip(@Valid @RequestBody ModifyNameTripRequest modifyNameTripRequest){
         return this.touristService.modifyNameTripService(modifyNameTripRequest);
+    }
+
+    @PostMapping("/addSetPoIHAI")
+    @PreAuthorize("hasRole('TOURIST') or hasRole('EXPERT') or hasRole('ADMIN')")
+    public ResponseEntity<?> addSetPoIHAI(@Valid @RequestBody AddSetPoIRequest addSetPoIRequest, HttpServletRequest request){
+        return this.touristService.addSetPoIHAIService(addSetPoIRequest, request);
+    }
+
+    @PostMapping("/setPoIToHAI")
+    @PreAuthorize("hasRole('TOURIST') or hasRole('EXPERT') or hasRole('ADMIN')")
+    public ResponseEntity<?> setPoIToHAI(@Valid @RequestBody SetPoIToHAIRequest setPoIToHAIRequest, HttpServletRequest request){
+        return this.touristService.setPoIToHAIService(setPoIToHAIRequest, request);
+    }
+
+    @PostMapping("/addFavoritePoIOfHAI")
+    @PreAuthorize("hasRole('TOURIST') or hasRole('EXPERT') or hasRole('ADMIN')")
+    public ResponseEntity<?> addFavoritePoIOfHAI(@Valid @RequestBody AddFavoritePoIRequest addFavoritePoIRequest, HttpServletRequest request){
+        return this.touristService.addFavoritePoIOfHAIService(addFavoritePoIRequest, request);
+    }
+
+    @GetMapping("/getListFavoritePoI")
+    @PreAuthorize("hasRole('TOURIST') or hasRole('EXPERT') or hasRole('ADMIN')")
+    public ResponseEntity<?> getListFavoritePoI(HttpServletRequest request){
+        return this.touristService.getListFavoritePoIService(request);
     }
 }

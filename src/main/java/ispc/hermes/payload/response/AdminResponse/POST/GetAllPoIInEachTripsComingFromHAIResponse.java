@@ -8,7 +8,11 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class GetAllPoIInEachTripsUsingAdminAccountResponse {
+public class GetAllPoIInEachTripsComingFromHAIResponse {
     private String message;
     private List<PoI> data;
+
+    public GetAllPoIInEachTripsComingFromHAIResponse(String message){
+        this.message = message;
+    }
 }

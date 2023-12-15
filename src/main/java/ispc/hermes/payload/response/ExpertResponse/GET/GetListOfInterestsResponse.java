@@ -1,6 +1,6 @@
 package ispc.hermes.payload.response.ExpertResponse.GET;
 
-import ispc.hermes.model.Interest;
+import ispc.hermes.model.TopicHAI;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -10,5 +10,5 @@ import java.util.List;
 @AllArgsConstructor
 public class GetListOfInterestsResponse {
     private String message;
-    private List<Interest> data;
+    private List<TopicHAI> data;
 }

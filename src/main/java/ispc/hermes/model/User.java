@@ -69,10 +69,16 @@ public class User {
     private Set<Role> roles = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "favorite_trip",
+    @JoinTable(name = "user_trip",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "trip_id"))
     private Set<Trip> trips = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "favorite_poi",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "position"))
+    private Set<PoI> poIS = new HashSet<>();
 
     public User(String username, String email, String password) {
         this.username = username;

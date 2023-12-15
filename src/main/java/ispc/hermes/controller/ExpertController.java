@@ -1,9 +1,8 @@
 package ispc.hermes.controller;
 
-import ispc.hermes.payload.request.POST.Expert.AddNewCategoryRequest;
-import ispc.hermes.payload.request.POST.Expert.AddNewInterestsRequest;
+import ispc.hermes.payload.request.GET.GetAllPoIInEachTripsComingFromHAIRequest;
 import ispc.hermes.payload.request.POST.Tourist.LoginRequest;
-import ispc.hermes.payload.request.POST.Tourist.SignupRequest;
+import ispc.hermes.payload.response.ExpertResponse.GET.AddTopicsResponse;
 import ispc.hermes.service.ExpertService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -24,40 +23,28 @@ public class ExpertController {
         return this.expertService.loginExpertService(loginRequest);
     }
 
-    @PostMapping("/addNewCategory")
+    @GetMapping("/addNewTopicFromHAI")
     @PreAuthorize("hasRole('EXPERT') or hasRole('ADMIN')")
-    public ResponseEntity<?> addNewCategory(@Valid @RequestBody AddNewCategoryRequest addNewCategoryRequest, HttpServletRequest request){
-        return this.expertService.addNewCategoryService(addNewCategoryRequest, request);
+    public ResponseEntity<AddTopicsResponse> addNewTopicFromHAI(HttpServletRequest request){
+        return this.expertService.addNewTopicFromHAIService(request);
     }
 
-    @GetMapping("/getListOfCategoriesNotActivate")
+    @GetMapping("/getListPoIsOfByTheHAI")
     @PreAuthorize("hasRole('EXPERT') or hasRole('ADMIN')")
-    public ResponseEntity<?> getListOfCategoriesNotActivate(){
-        return this.expertService.getListOfCategoriesNotActivateService();
+    public ResponseEntity<?> getListPoIsOfByTheHAI(HttpServletRequest request){
+        return this.expertService.getListPoIsOfByTheHAIService(request);
     }
 
-    @GetMapping("/getListOfCategoriesActivate")
+    @GetMapping("/getListOfTripsUsingHAI")
     @PreAuthorize("hasRole('EXPERT') or hasRole('ADMIN')")
-    public ResponseEntity<?> getListOfCategoriesActivate(){
-        return this.expertService.getListOfCategoriesActivateService();
+    public ResponseEntity<?> getListOfTripsUsingHAI(HttpServletRequest request){
+        return this.expertService.getListOfTripsUsingHAIService(request);
     }
 
-    @PostMapping("/addNewInterests")
+    @PostMapping("/getAllPoIInEachTripsComingFromHAI")
     @PreAuthorize("hasRole('EXPERT') or hasRole('ADMIN')")
-    public ResponseEntity<?> addNewInterests(@Valid @RequestBody AddNewInterestsRequest addNewInterestsRequest, HttpServletRequest request){
-        return this.expertService.addNewInterestsService(addNewInterestsRequest, request);
-    }
-
-    @GetMapping("/getListOfInterestsNotActivate")
-    @PreAuthorize("hasRole('EXPERT') or hasRole('ADMIN')")
-    public ResponseEntity<?> getListOfInterestsNotActivate(){
-        return this.expertService.getListOfInterestsNotActivateService();
-    }
-
-    @GetMapping("/getListOfInterestsActivate")
-    @PreAuthorize("hasRole('EXPERT') or hasRole('ADMIN')")
-    public ResponseEntity<?> getListOfInterestsActivate(){
-        return this.expertService.getListOfInterestsActivateService();
+    public ResponseEntity<?> getAllPoIInEachTripsComingFromHAI(@Valid @RequestBody GetAllPoIInEachTripsComingFromHAIRequest getAllPoIInEachTripsComingFromHAIRequest){
+        return this.expertService.getAllPoIInEachTripsComingFromHAIService(getAllPoIInEachTripsComingFromHAIRequest);
     }
 
 }

@@ -31,12 +31,24 @@ public class Trip {
     private String nameLocationTrip;
 
     @Nullable
+    private String tripId;
+
+    @Nullable
     private String nameLocationTripUpdate;
 
+    @Nullable
+    private Double ranking;
+
+    @Nullable
+    private Integer counter;
+
+    @Nullable
     private Boolean isPublishedToHerMeS;
 
+    @Nullable
     private Boolean isPersonalTrip;
 
+    @Nullable
     private Boolean isFavoriteTrip;
 
     @ManyToMany(fetch = FetchType.LAZY)

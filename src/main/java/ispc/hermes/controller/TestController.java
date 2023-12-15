@@ -17,7 +17,7 @@ public class TestController {
     @Autowired
     JwtUtils jwtUtils;
 
-    @GetMapping("/all")
+    @GetMapping("all")
     public String allAccess() {
         return "Public Content.";
     }
